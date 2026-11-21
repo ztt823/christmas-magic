@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Christmas Magic · 圣诞手势魔法</title>
+<style>
+:root{--gold:#f7d98a;--mint:#b7e7ce;--red:#c94b52}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#04130f;color:#fff;font-family:"Microsoft YaHei",system-ui,sans-serif}
+#stage{position:fixed;inset:0}canvas{display:block}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 43%,transparent 28%,rgba(0,8,6,.35) 78%,rgba(0,5,4,.8) 100%);z-index:2}
+header{position:fixed;z-index:5;top:26px;left:0;right:0;text-align:center;pointer-events:none}
+.eyebrow{font-size:10px;letter-spacing:6px;color:#d8c18a;opacity:.9}
+h1{font-family:Georgia,serif;font-size:clamp(30px,5vw,58px);font-weight:400;letter-spacing:5px;margin:8px 0 4px;color:#f7e8bf;text-shadow:0 0 24px #d9b65a66}
+.subtitle{font-size:11px;letter-spacing:4px;color:#b6cbbb}
+#hint{position:fixed;z-index:5;top:155px;left:50%;transform:translateX(-50%);padding:9px 20px;border:1px solid #d7bd7555;border-radius:30px;background:#061b16a8;color:#e9d9a9;font-size:12px;letter-spacing:1px;white-space:nowrap;backdrop-filter:blur(8px)}
+#photoFrame{position:fixed;z-index:4;left:50%;top:52%;transform:translate(-50%,-50%) scale(.96);width:min(33vw,360px);height:min(44vh,440px);min-width:220px;min-height:260px;padding:9px;border:1px solid #e5cb81;background:linear-gradient(145deg,#f8e8b7,#a77c3d 35%,#f8e8b7 60%,#735126);box-shadow:0 0 30px #eacb6a55,0 22px 70px #000a;opacity:0;visibility:hidden;transition:opacity .55s,transform .65s cubic-bezier(.2,.8,.2,1),visibility .55s}
+#photoFrame.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+#photoFrame img{width:100%;height:100%;object-fit:cover;background:#10251d;display:block}
+#photoCaption{position:fixed;z-index:5;top:calc(52% + min(22vh,220px) + 20px);left:50%;transform:translateX(-50%);color:#f1dfad;letter-spacing:3px;font:12px Georgia,serif;text-shadow:0 2px 8px #000;opacity:0;transition:opacity .4s}
+#photoCaption.show{opacity:1}
+#panel{position:fixed;z-index:7;left:22px;bottom:20px;width:260px;padding:15px;border:1px solid #d8c17b55;border-radius:14px;background:linear-gradient(145deg,#0a251ddf,#06130fee);backdrop-filter:blur(12px);box-shadow:0 12px 40px #0006}
+.panelTitle{font:13px Georgia,serif;color:#f0d99b;letter-spacing:2px;margin-bottom:10px}
+#upload{width:100%;font-size:11px;color:#d8dfd5}
+#upload::file-selector-button{border:1px solid #c9aa63;background:#17372a;color:#f7e6b8;border-radius:20px;padding:7px 12px;margin-right:8px;cursor:pointer}
+#photoCount{font-size:10px;color:#9db5a4;margin-top:8px}
+#camBtn{margin-top:12px;width:100%;border:1px solid #c7a85e;border-radius:22px;background:linear-gradient(90deg,#7c5a27,#b18a43);color:#fff4d2;padding:9px;letter-spacing:1px;cursor:pointer}
+#camBtn:hover{filter:brightness(1.15)}
+#cameraBox{position:fixed;z-index:7;right:20px;bottom:20px;width:150px;height:112px;border:1px solid #cbb46c66;border-radius:12px;overflow:hidden;background:#071610;opacity:.8}
+#video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#camLabel{position:absolute;left:7px;top:6px;font-size:9px;letter-spacing:1px;color:#f2dfad;text-shadow:0 1px 4px #000}
+#guide{position:fixed;z-index:5;right:22px;top:28px;text-align:right;color:#c4d6c8;font-size:10px;line-height:2.05;letter-spacing:.5px;text-shadow:0 2px 5px #000}
+#guide b{color:#f0d89c;font-weight:500}
+#status{font-size:10px;color:#e3d3a5;margin-top:7px;min-height:14px}
+@media(max-width:650px){#guide{top:auto;bottom:155px;right:15px;font-size:9px}#panel{left:12px;bottom:12px;width:225px}#cameraBox{right:12px;bottom:12px;width:112px;height:84px}#hint{top:145px;font-size:10px}#photoFrame{width:68vw;height:42vh;min-width:0;min-height:0}#photoCaption{top:78%}}
+</style>
+</head>
+<body>
+<div id="stage"></div><div class="vignette"></div>
+<header><div class="eyebrow">A LITTLE CHRISTMAS WONDER</div><h1>MERRY CHRISTMAS</h1><div class="subtitle">LET THE MAGIC BEGIN</div></header>
+<div id="hint">握拳 · 汇聚圣诞树　　摊开手掌 · 星光绽放</div>
+<div id="photoFrame"><img id="photo" alt="圣诞照片"></div><div id="photoCaption">CHRISTMAS MEMORY · 01 / 05</div>
+<div id="guide"><b>握拳</b>　聚合圣诞树<br><b>五指张开</b>　星星绽放<br><b>食指伸出</b>　下一张照片<br><b>V 字手势</b>　上一张照片</div>
+<div id="panel"><div class="panelTitle">✧ YOUR CHRISTMAS MEMORIES ✧</div><input id="upload" type="file" accept="image/*" multiple><div id="photoCount">可选择 1–5 张照片 · 每次只展示一张</div><button id="camBtn">开启摄像头互动</button><div id="status">等待开启摄像头…</div></div>
+<div id="cameraBox"><video id="video" autoplay playsinline muted></video><div id="camLabel">HAND TRACKING</div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script>
+(() => {
+const stage=document.getElementById('stage'), hint=document.getElementById('hint'), status=document.getElementById('status');
+const photoFrame=document.getElementById('photoFrame'), photo=document.getElementById('photo'), caption=document.getElementById('photoCaption');
+let scene,camera,renderer,particles,geometry,positions=[],treeTargets=[],starTargets=[],velocities=[],count=2600,mode='tree',targetMode='tree',clock=new THREE.Clock(),snow=[];
+const rand=(a,b)=>a+Math.random()*(b-a);
+function makeTargets(){
+ for(let i=0;i<count;i++){
+  const h=Math.random()*10.5, y=-5.2+h, radius=(1-h/10.5)*2.65;
+  const a=Math.random()*Math.PI*2, r=Math.sqrt(Math.random())*radius;
+  treeTargets.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r));
+  const rr=rand(2.4,9.5), th=Math.random()*Math.PI*2, ph=Math.acos(rand(-1,1));
+  starTargets.push(new THREE.Vector3(rr*Math.sin(ph)*Math.cos(th),rr*Math.cos(ph),rr*Math.sin(ph)*Math.sin(th)));
+ }
+}
+function init(){
+ scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x04130f,.035);
+ camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,100);camera.position.set(0,1.1,17);
+ renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);stage.appendChild(renderer.domElement);
+ scene.add(new THREE.AmbientLight(0xffffff,.75));
+ const p1=new THREE.PointLight(0xffd889,2.1,30);p1.position.set(4,7,8);scene.add(p1);
+ const p2=new THREE.PointLight(0x1eaa70,1.5,24);p2.position.set(-6,-1,-5);scene.add(p2);
+ makeTargets();
+ const arr=new Float32Array(count*3), colors=new Float32Array(count*3), sizes=new Float32Array(count);
+ const gold=new THREE.Color(0xffd66e), green=new THREE.Color(0x42b985), red=new THREE.Color(0xc84b4b), white=new THREE.Color(0xfff2cb);
+ for(let i=0;i<count;i++){
+  const v=treeTargets[i];arr.set([v.x,v.y,v.z],i*3);
+  let c=Math.random();const col=c<.56?gold:c<.84?green:c<.94?red:white;
+  colors.set([col.r,col.g,col.b],i*3);sizes[i]=rand(.65,2.4);
+  velocities.push(new THREE.Vector3());
+ }
+ geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(arr,3));geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));geometry.setAttribute('aSize',new THREE.BufferAttribute(sizes,1));
+ const mat=new THREE.PointsMaterial({size:.075,vertexColors:true,transparent:true,opacity:.96,blending:THREE.AdditiveBlending,depthWrite:false});
+ particles=new THREE.Points(geometry,mat);scene.add(particles);
+ // floating snow layers
+ const snowGeo=new THREE.BufferGeometry(), snowArr=new Float32Array(750*3);
+ for(let i=0;i<750;i++){snowArr[i*3]=rand(-13,13);snowArr[i*3+1]=rand(-9,10);snowArr[i*3+2]=rand(-8,5)}
+ snowGeo.setAttribute('position',new THREE.BufferAttribute(snowArr,3));
+ const snowMat=new THREE.PointsMaterial({color:0xeaf7f1,size:.045,transparent:true,opacity:.65});
+ const snowPts=new THREE.Points(snowGeo,snowMat);scene.add(snowPts);snow.push({geo:snowGeo,pts:snowPts});
+ // glowing tree-top star
+ const star=new THREE.Group();star.position.set(0,5.65,0);scene.add(star);
+ const starShape=new THREE.Shape();for(let i=0;i<10;i++){let a=Math.PI/2+i*Math.PI/5,r=i%2===0?.42:.19;let x=Math.cos(a)*r,y=Math.sin(a)*r;i?starShape.lineTo(x,y):starShape.moveTo(x,y)}starShape.closePath();
+ const sg=new THREE.ShapeGeometry(starShape);const sm=new THREE.MeshBasicMaterial({color:0xffe6a0,side:THREE.DoubleSide});star.add(new THREE.Mesh(sg,sm));
+ const glow=new THREE.PointLight(0xffd46b,2.5,7);glow.position.set(0,0,1);star.add(glow);scene.userData.topStar=star;
+ // ornament rings around tree
+ for(let j=0;j<4;j++){const y=-3.7+j*2.2,r=(1-(y+5.2)/10.5)*2.55;const ring=new THREE.Mesh(new THREE.TorusGeometry(Math.max(.3,r),.012,6,100),new THREE.MeshBasicMaterial({color:j%2?0xb58b43:0x4e9b72,transparent:true,opacity:.5}));ring.rotation.x=Math.PI/2;ring.position.y=y;scene.add(ring)}
+ window.addEventListener('resize',resize);animate();
+}
+function resize(){if(!camera)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+function setMode(m){
+ if(m===targetMode)return;targetMode=m;
+ if(m==='tree'){hint.textContent='✦ 星光汇聚 · 圣诞树正在重现 ✦';photoFrame.classList.remove('show');caption.classList.remove('show')}
+ if(m==='stars'){hint.textContent='✧ 星河绽放 · 让圣诞星光环绕你 ✧';photoFrame.classList.remove('show');caption.classList.remove('show')}
+ if(m==='next'){showPhoto(1);return}
+ if(m==='prev'){showPhoto(-1);return}
+}
+function showPhoto(dir){
+ if(!photos.length){status.textContent='请先上传照片（最多五张）';targetMode='tree';return}
+ if(dir===1)photoIndex=(photoIndex+1)%photos.length;else photoIndex=(photoIndex-1+photos.length)%photos.length;
+ photo.src=photos[photoIndex];photoFrame.classList.add('show');caption.textContent='CHRISTMAS MEMORY · '+String(photoIndex+1).padStart(2,'0')+' / '+String(photos.length).padStart(2,'0');caption.classList.add('show');
+ hint.textContent='✧ 正在展示第 '+(photoIndex+1)+' 张回忆 · 食指下一张 / V 字上一张 ✧';
+ targetMode='photo';
+}
+let photos=[],photoIndex=-1;
+document.getElementById('upload').addEventListener('change',e=>{
+ photos.forEach(u=>URL.revokeObjectURL(u));photos=Array.from(e.target.files||[]).slice(0,5).map(f=>URL.createObjectURL(f));photoIndex=-1;
+ document.getElementById('photoCount').textContent='已载入 '+photos.length+' / 5 张 · 一次只展示一张';
+ status.textContent=photos.length?'照片已准备好，做食指手势即可展示':'尚未选择照片';
+});
+function animate(){
+ requestAnimationFrame(animate);const t=clock.getElapsedTime();
+ if(particles){
+  const attr=geometry.attributes.position;const target=targetMode==='stars'?starTargets:treeTargets;
+  for(let i=0;i<count;i++){let k=i*3,p=attr.array,v=target[i];p[k]+=(v.x-p[k])*.045;p[k+1]+=(v.y-p[k+1])*.045;p[k+2]+=(v.z-p[k+2])*.045}
+  attr.needsUpdate=true;
+  particles.rotation.y+=targetMode==='stars'?.0028:.0012;
+  particles.rotation.x=Math.sin(t*.22)*.035;
+  particles.material.size=targetMode==='stars'?.105:.075;
+  scene.userData.topStar.scale.setScalar(1+Math.sin(t*3.2)*.1);
+ }
+ snow.forEach(s=>{const a=s.geo.attributes.position;for(let i=0;i<a.count;i++){a.array[i*3+1]-=.012+(i%5)*.001;if(a.array[i*3+1]<-9)a.array[i*3+1]=10;a.array[i*3]+=Math.sin(t*.5+i)*.001}a.needsUpdate=true});
+ renderer.render(scene,camera);
+}
+init();
+// hand tracking
+const video=document.getElementById('video');let mpCamera=null,lastGesture='',candidate='',candidateAt=0,lastAction=0,handReady=false;
+function classify(lm){
+ const up=(tip,pip)=>lm[tip].y<lm[pip].y-.025;
+ const idx=up(8,6),mid=up(12,10),ring=up(16,14),pinky=up(20,18);
+ const thumb=Math.abs(lm[4].x-lm[2].x)>.075;
+ const n=[idx,mid,ring,pinky].filter(Boolean).length;
+ if(n===4&&thumb)return 'open';
+ if(n===0&&!thumb)return 'fist';
+ if(idx&&!mid&&!ring&&!pinky)return 'next';
+ if(idx&&mid&&!ring&&!pinky)return 'prev';
+ return 'other';
+}
+function onResults(res){
+ if(!res.multiHandLandmarks||!res.multiHandLandmarks.length){status.textContent='请将手掌放在摄像头前';return}
+ const g=classify(res.multiHandLandmarks[0]);
+ if(g==='other'){candidate='';return}
+ if(g!==candidate){candidate=g;candidateAt=performance.now();return}
+ if(performance.now()-candidateAt<260||performance.now()-lastAction<850)return;
+ if(g!==lastGesture){
+  lastGesture=g;lastAction=performance.now();
+  if(g==='open')setMode('stars');
+  if(g==='fist')setMode('tree');
+  if(g==='next')setMode('next');
+  if(g==='prev')setMode('prev');
+  status.textContent=({open:'识别：五指张开 · 星光绽放',fist:'识别：握拳 · 圣诞树聚合',next:'识别：食指 · 下一张照片',prev:'识别：V 字 · 上一张照片'})[g];
+ }
+}
+document.getElementById('camBtn').addEventListener('click',async()=>{
+ try{
+  status.textContent='正在启动摄像头…';
+  if(!window.Hands||!window.Camera){throw new Error('手势识别组件加载失败，请刷新网页后重试')}
+  const hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+  hands.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:.68,minTrackingConfidence:.62});
+  hands.onResults(onResults);
+  mpCamera=new Camera(video,{onFrame:async()=>{await hands.send({image:video})},width:640,height:480});
+  await mpCamera.start();handReady=true;status.textContent='摄像头已开启 · 请将手掌对准镜头';document.getElementById('camBtn').textContent='摄像头已开启';
+ }catch(err){status.textContent='启动失败：'+err.message;console.error(err)}
+});
+})();
+</script>
+</body></html>
